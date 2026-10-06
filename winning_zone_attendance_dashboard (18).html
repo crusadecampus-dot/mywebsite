@@ -1,0 +1,401 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Winning Zone – Attendance Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--n:#0b1f3a;--n2:#14315c;--g:#d4a017;--bg:#f3f5f9;--c:#fff;--t:#1b2433;--m:#6b7688;--ok:#1e9e5a;--no:#d64545;--lv:#e08a1e;--wo:#7a7f8c}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--t)}
+header{background:var(--n);color:#fff;padding:12px 16px;border-bottom:3px solid var(--g)}header h1{margin:0;font-size:18px;color:var(--g)}header small{color:#cbd5e6}
+nav{display:flex;gap:4px;background:var(--n2);padding:6px 10px;overflow-x:auto}nav button{background:none;border:0;color:#cbd5e6;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600;white-space:nowrap}nav button.on{background:var(--g);color:var(--n)}
+main{padding:14px;max-width:1150px;margin:auto}.card{background:var(--c);border-radius:10px;padding:14px;margin-bottom:14px;box-shadow:0 1px 4px #0001}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.kpi{background:var(--c);border-radius:10px;padding:12px;border-left:4px solid var(--g);box-shadow:0 1px 4px #0001}.kpi b{display:block;font-size:24px;color:var(--n)}.kpi span{color:var(--m);font-size:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:end;margin-bottom:10px}.row label{font-size:12px;color:var(--m);display:flex;flex-direction:column;gap:3px}
+input,select{padding:7px;border:1px solid #cdd4e0;border-radius:6px;font:inherit;background:#fff}
+.btn{background:var(--n);color:#fff;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600}.btn.g{background:var(--g);color:var(--n)}.btn.r{background:var(--no)}.btn.s{padding:4px 8px;font-size:12px}
+table{width:100%;border-collapse:collapse}th,td{padding:7px 8px;border-bottom:1px solid #e6eaf1;text-align:left}th{background:var(--n);color:#fff;font-size:12px;position:sticky;top:0}.sc{overflow:auto;max-height:520px}
+.st{display:inline-flex;gap:3px}.st button{border:1px solid #cdd4e0;background:#fff;border-radius:5px;padding:4px 8px;cursor:pointer;font-size:12px}
+.st .Present.on{background:var(--ok);color:#fff}.st .Absent.on{background:var(--no);color:#fff}.st .Leave.on{background:var(--lv);color:#fff}.st .Weekoff.on{background:var(--wo);color:#fff}
+.tag{padding:2px 8px;border-radius:10px;color:#fff;font-size:12px}.Present.tag{background:var(--ok)}.Absent.tag{background:var(--no)}.Leave.tag{background:var(--lv)}.Weekoff.tag{background:var(--wo)}
+.bar{background:#e6eaf1;border-radius:6px;height:14px;overflow:hidden;flex:1}.bar i{display:block;height:100%;background:var(--g)}.bl{display:flex;gap:8px;align-items:center;margin:5px 0}.bl span:first-child{width:110px}
+.pay{cursor:pointer;border:0;border-radius:10px;padding:2px 8px;font-size:12px;color:#fff}.Paid{background:var(--ok)}.Unpaid{background:var(--no)}
+.pp{display:inline-flex;gap:3px}.pp button{border:1px solid #cdd4e0;background:#fff;border-radius:5px;padding:4px 8px;cursor:pointer;font-size:12px}.pp .pP.on{background:var(--ok);color:#fff}.pp .pU.on{background:var(--no);color:#fff}td select{padding:3px}
+h3{margin:0 0 10px;color:var(--n)}.sec{display:none}.sec.on{display:block}.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--n);color:#fff;padding:10px 18px;border-radius:8px;display:none}
+.btn.Present{background:var(--ok)}.btn.Absent{background:var(--no)}.btn.Leave{background:var(--lv)}.btn.Weekoff{background:var(--wo)}.btn.Paid{background:var(--ok)}.btn.Unpaid{background:var(--no)}
+.bulk{background:#f7f3e3;border:1px solid #e8dca8;border-radius:8px;padding:8px;align-items:center}.bulk b{color:var(--n)}.bulk .sp{width:1px;height:22px;background:#cdbf7a;margin:0 4px}
+td input[type=date],td input[type=time]{padding:4px;width:auto}td input[type=checkbox],th input[type=checkbox]{width:18px;height:18px;cursor:pointer}
+tr.grp td{background:#fff4d1;color:var(--n);font-weight:700;border-top:2px solid var(--g)}
+.nopay{color:var(--m);font-size:11px;margin-left:4px}
+tr.dup td{background:#ffd9d9}tr.shared td{background:#fff6d6}tr.sim td{background:#ffe9cf}
+.cb{display:inline-block;padding:1px 7px;border-radius:10px;background:var(--n2);color:#fff;font-size:11px;margin:1px}.fl{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:700;margin-left:4px}.fl.d{background:var(--no);color:#fff}.fl.sh{background:var(--g);color:var(--n)}.fl.sm{background:var(--lv);color:#fff}
+#modal{display:none;position:fixed;inset:0;background:#0008;z-index:9;align-items:center;justify-content:center}#modal .card{min-width:290px;max-width:92vw}#mb label{display:flex;gap:8px;align-items:center;padding:6px 0;font-size:15px}#mb input{width:18px;height:18px}
+.pq{display:inline-flex;gap:4px;flex-wrap:wrap}.sc thead tr+tr th{top:31px}.mx td,.mx th{text-align:center;padding:4px 6px}.mx td:first-child,.mx th:first-child{text-align:left;white-space:nowrap}.rp td:not(:first-child),.rp th:not(:first-child){text-align:center}
+.nl{margin-top:6px;font-size:12px;line-height:1.8;max-width:420px}.nl .g{margin-bottom:3px}.nl i{display:inline-block;font-style:normal;padding:0 7px;border-radius:9px;background:#eef1f6;margin:1px 2px 1px 0}.nl .P i{background:#d9f3e5}.nl .A i{background:#fbdcdc}.nl .L i{background:#fde8cc}.nl .W i{background:#e6e8ee}.nl .U i{background:#fff0c2}
+
+.st button,.pp button{font-weight:600}
+.st .Present{color:var(--ok);border-color:#9bd9b8;background:#eefaf3}.st .Absent{color:var(--no);border-color:#efaaaa;background:#fdf0f0}.st .Leave{color:var(--lv);border-color:#f0c999;background:#fff6ea}.st .Weekoff{color:var(--wo);border-color:#c3c7d1;background:#f1f2f5}
+.pp .pP{color:var(--ok);border-color:#9bd9b8;background:#eefaf3}.pp .pU{color:var(--no);border-color:#efaaaa;background:#fdf0f0}
+.st button.on,.pp button.on{color:#fff;font-weight:700;box-shadow:0 0 0 2px #0003}
+.st .Present.on,.pp .pP.on{background:var(--ok);border-color:var(--ok)}.st .Absent.on,.pp .pU.on{background:var(--no);border-color:var(--no)}.st .Leave.on{background:var(--lv);border-color:var(--lv)}.st .Weekoff.on{background:var(--wo);border-color:var(--wo)}
+td:has(.st .Present.on),td:has(.pp .pP.on){background:#dcf3e6!important}td:has(.st .Absent.on),td:has(.pp .pU.on){background:#fbdcdc!important}td:has(.st .Leave.on){background:#fde8cc!important}td:has(.st .Weekoff.on){background:#e6e8ee!important}
+.nopay{background:#eef1f6;border-radius:8px;padding:1px 6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;margin:0 0 10px;color:var(--m)}.legend i{font-style:normal;color:#fff;padding:2px 9px;border-radius:10px;font-weight:600}.legend .P{background:var(--ok)}.legend .A{background:var(--no)}.legend .L{background:var(--lv)}.legend .W{background:var(--wo)}
+
+#perf .hero{background:linear-gradient(135deg,var(--n) 0%,#1d4a8a 100%);color:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border-bottom:3px solid var(--g)}
+#perf .hero small{color:#cbd5e6}#perf .hero .row label{color:#cbd5e6}#perf .hero .row{margin-bottom:6px}
+.seg{display:inline-flex;background:#ffffff22;border-radius:10px;padding:3px}.seg button{border:0;background:none;color:#fff;padding:7px 18px;border-radius:8px;font-weight:700;cursor:pointer}.seg button.on{background:var(--g);color:var(--n)}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}.kp div{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px #0001}.kp b{display:block;font-size:26px;color:var(--n)}.kp span{font-size:12px;color:var(--m)}
+.cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;margin-bottom:14px}
+.cc{display:flex;gap:12px;align-items:center;background:#fff;border-radius:12px;padding:12px;cursor:pointer;border:2px solid transparent;box-shadow:0 1px 4px #0001}.cc.sel{border-color:var(--g);background:#fffaea}
+.ring{--v:0;--c:#999;width:60px;height:60px;border-radius:50%;flex:none;background:conic-gradient(var(--c) calc(var(--v)*1%),#e6eaf1 0);display:grid;place-items:center}.ring b{background:#fff;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:14px;color:var(--n)}
+.gd{display:inline-block;padding:2px 9px;border-radius:10px;color:#fff;font-size:11px;font-weight:700;white-space:nowrap}
+.heat{display:inline-flex;gap:2px;flex-wrap:wrap;max-width:230px}.heat i{width:9px;height:9px;border-radius:2px;background:#e6eaf1}.heat .Present{background:var(--ok)}.heat .Absent{background:var(--no)}.heat .Leave{background:var(--lv)}.heat .Weekoff{background:var(--wo)}
+.col{display:flex;align-items:flex-end;gap:6px;height:150px;overflow-x:auto;padding-top:4px}.col>div{flex:1;min-width:34px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:10px;color:var(--m);text-align:center}.col i{display:block;width:70%;background:linear-gradient(var(--g),#b8860b);border-radius:5px 5px 0 0;min-height:2px}
+.mix{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.donut{width:130px;height:130px;border-radius:50%;display:grid;place-items:center}.donut b{background:#fff;width:84px;height:84px;border-radius:50%;display:grid;place-items:center;font-size:22px;color:var(--n)}.mix ul{list-style:none;margin:0;padding:0;line-height:1.9}.mix li i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.ie{background:#eef3fb;border:1px solid #d3dff2;border-radius:8px;padding:6px 8px;align-items:center}.ie b{color:var(--n)}label.impl{flex-direction:row;background:var(--n);color:#fff;padding:4px 8px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px}
+.mt{margin-top:2px}
+</style></head><body>
+<header><h1>🏋️ Winning Zone – Attendance Dashboard</h1><small>Coaches & Clients · Vipul Green / Park View</small></header>
+<nav id="nav"></nav><main>
+<section id="dash" class="sec on">
+<div class="row"><label>Month<input type="month" id="dm"></label><label>From date<input type="date" id="df"></label><label>To date<input type="date" id="dt2"></label><label>Location<select id="dl"></select></label><span class="pq" data-for="dash"></span></div>
+<div class="grid" id="kpis"></div><br>
+<div class="card"><h3>📣 Daily alert &amp; WhatsApp report</h3><div class="row"><label>Report date<input type="date" id="td" class="dt"></label><button class="btn g" id="wall">📲 WhatsApp full report</button><button class="btn" id="wcopy">📋 Copy report</button><span style="color:var(--m);font-size:12px">Use 📲 Send on a coach row to send that coach their own attendance + their clients' details. Add the coach's number with 📱 once.</span></div><div id="tcard"></div></div>
+<div class="two"><div class="card"><h3>Coach attendance (period)</h3><div id="cb"></div></div><div class="card"><h3>Client attendance by coach (period)</h3><div id="clb"></div></div></div>
+<div class="two"><div class="card"><h3>Daily client attendance trend</h3><div id="tr"></div></div><div class="card"><h3>Most absent clients</h3><div id="ab"></div></div></div>
+<div class="card"><h3>📋 Report – name wise (selected period)</h3><div class="row"><label>Type<select id="rt"><option value="">Coaches + Clients</option><option>Coach</option><option>Client</option></select></label><label>Coach<select id="rc"></select></label><button class="btn g" id="rx">⬇ Excel (name &amp; month wise)</button><span id="rcount" style="color:var(--m)"></span></div><div class="sc rp"><table><thead><tr><th>Type</th><th>Name</th><th>Coach</th><th>Present</th><th>Absent</th><th>Leave</th><th>Weekoff</th><th>Total</th><th>Att %</th></tr></thead><tbody id="rbody"></tbody></table></div><small style="color:var(--m)">Att % = Present ÷ (Total − Weekoff)</small></div>
+</section>
+<section id="coach" class="sec"><div class="card"><h3>Coach Attendance – Morning &amp; Evening</h3>
+<div class="legend"><b>Colour code:</b> <i class="P">Present</i><i class="A">Absent</i><i class="L">Leave</i><i class="W">Weekoff</i></div>
+<div class="row"><label>Date (all rows)<input type="date" id="cd" class="dt"></label><label>Location (all rows)<select id="cl" class="loc"></select></label></div>
+<div style="font-size:12px;color:var(--m);margin-bottom:6px">Each coach has one row per shift (Morning / Evening). Set date and location above to fill all rows, then adjust any row. Every tap saves · tap the active status again to clear.</div>
+<div class="sc"><table><thead><tr><th>#</th><th>Coach</th><th>Shift</th><th>Date</th><th>Location</th><th>Status</th><th>Edit / Remove</th></tr></thead><tbody id="cbody"></tbody></table></div>
+<div class="row" style="margin-top:10px"><label>Add coach<input id="nc" placeholder="Name"></label><button class="btn s" id="addc">Add</button></div></div>
+<div class="card"><h3>📅 Coach report – Morning &amp; Evening (all data, one page)</h3><div class="row"><label>From date<input type="date" id="cf"></label><label>To date<input type="date" id="ct2"></label><span class="pq" data-for="coach"></span><label>Location<select id="crl"></select></label><button class="btn g" id="cx">⬇ Excel</button><span id="cinfo" style="color:var(--m)"></span></div><div id="cs"></div><br><h3>Day-wise</h3><div id="cm"></div></div></section>
+<section id="client" class="sec"><div class="card"><h3>Client Attendance</h3>
+<div class="legend"><b>Colour code:</b> <i class="P">Present</i><i class="A">Absent</i><i class="L">Leave</i><i class="W">Weekoff</i>&nbsp;|&nbsp;<b>Payment:</b> <i class="P">Paid</i><i class="A">Unpaid</i></div>
+<div class="row"><label>Date<input type="date" class="dt"></label><label>Coach<select id="kc"></select></label><label>Location<select class="loc"></select></label><label>Payment filter<select id="kp"><option value="">All</option><option>Paid</option><option>Unpaid</option><option>Not set</option></select></label><label>Search<input id="ks" placeholder="Find client"></label><span id="kcount" style="color:var(--m)"></span></div>
+<div class="row bulk"><b id="ksel">0 selected</b><label style="flex-direction:row;align-items:center;gap:4px">Shift <select id="bsh"></select></label><label style="flex-direction:row;align-items:center;gap:4px">Coach <select id="bco"></select></label><button class="btn s" data-sa="1">☑ Select all</button><button class="btn s" data-sa="0">☐ Deselect all</button><span class="sp"></span>Attendance for selected:
+<button class="btn s Present" data-bs="Present">Present</button><button class="btn s Absent" data-bs="Absent">Absent</button><button class="btn s Leave" data-bs="Leave">Leave</button><button class="btn s Weekoff" data-bs="Weekoff">Weekoff</button><button class="btn s" data-bs="__clear">Clear</button><span class="sp"></span>Payment for selected (<b id="pmon"></b>):
+<button class="btn s Paid" data-bp="Paid">Paid</button><button class="btn s Unpaid" data-bp="Unpaid">Unpaid</button><button class="btn s" data-bp="">Clear</button></div>
+<div style="font-size:12px;color:var(--m);margin-bottom:6px"><span class="fl d">Duplicate</span> same name repeated &nbsp;<span class="fl sm">Similar</span> almost the same spelling &nbsp;<span class="fl sh">Shared</span> trained by 2+ coaches</div>
+<div class="sc"><table><thead id="kh"><tr><th><input type="checkbox" id="selall" title="Select all shown"></th><th>#</th><th>Client</th><th>Coach</th><th>Payment</th><th>Attendance</th><th>Edit / Remove</th></tr></thead><tbody id="kbody"></tbody></table></div>
+<div class="row" style="margin-top:10px"><label>Add client<input id="nk" placeholder="Name"></label><label>Coach<select id="nkc"></select></label><button class="btn s" id="addk">Add client</button><button class="btn s g" id="addcc">➕ Add coach</button></div></div></section>
+<section id="hist" class="sec"><div class="card"><h3>History</h3>
+<div class="row"><label>Type<select id="ht"><option value="">All</option><option>Coach</option><option>Client</option></select></label><label>Date<input type="date" id="hd"></label><label>Month<input type="month" id="hm"></label><label>Coach<select id="hc"></select></label><label>Location<select id="hl"></select></label><label>Status<select id="hs"></select></label><label>Payment<select id="hp"><option value="">All</option><option>Paid</option><option>Unpaid</option><option>Not set</option></select></label><label>View<select id="hv"><option value="">All together (list)</option><option value="coach">Coach-wise</option></select></label><label>Name<input id="hn"></label><button class="btn s" id="hclr">Clear</button></div>
+<div id="hcount" style="color:var(--m);margin-bottom:6px"></div><div class="sc"><table><thead><tr><th>Date</th><th>Type</th><th>Name</th><th>Coach</th><th>Shift</th><th>Location</th><th>Pay</th><th>Status</th><th></th></tr></thead><tbody id="hbody"></tbody></table></div></div></section>
+<section id="set" class="sec"><div class="two"><div class="card"><h3>Data</h3><div class="row"><button class="btn g" id="wa1">WhatsApp – current view</button><button class="btn g" id="wa2">WhatsApp – all data</button></div>
+<div class="row"><button class="btn" id="x1">Excel – current view (name &amp; month wise)</button><button class="btn" id="x2">Excel – all data (name &amp; month wise)</button></div>
+<div class="row"><button class="btn" id="bk">Backup (JSON)</button><label>Restore<input type="file" id="rs" accept=".json"></label></div><div class="row"><button class="btn g" id="rl">Reload client lists from Excel</button></div><div class="row"><button class="btn r" id="clr">Clear all attendance</button></div></div>
+<div class="card"><h3>Add-on options</h3><div class="row"><label>Shift<input id="ns"></label><button class="btn s" id="as">Add</button></div><div class="row"><label>Location<input id="nl"></label><button class="btn s" id="al">Add</button></div><p style="color:var(--m)">Settings are saved automatically in this browser.</p></div>
+<div class="card" style="grid-column:1/-1"><h3>Duplicate &amp; shared client check</h3><div id="dupbox"></div></div></div></section>
+<section id="perf" class="sec"></section></main><div id="modal"><div class="card"><h3 id="mt"></h3><div id="mb"></div><div class="row" style="margin-top:10px"><button class="btn" id="msave">Save</button><button class="btn r" id="mcancel">Cancel</button></div></div></div><div id="toast"></div>
+<script>
+const SEED={"coaches": ["Jijo", "Hemanshu", "Enanj"], "clients": ["Aayushi", "Abimaniyu", "Aditi", "Aishwarya", "Anamik", "Anita", "Anjali", "Ankur", "Ankush", "Anu", "Anu Obrai", "Anuja", "Avnesha", "Apoorva", "Arvind", "Ashish", "Ashwarya", "Ayushi", "Abuja", "Babita", "Bhavna Mathur", "Bhawna", "Chandramouli", "Devansh", "Divya", "Dr. Payal", "Gitika", "Gaurvi", "Harsh Mother", "Ishan", "Jalaj", "Khushboo", "Kimmi", "Kirthika", "Komal", "Laksha", "Madhu", "Maira", "Manas", "Manjula", "Mayank New Join", "Meenu", "Megha", "Monika", "Mruganayani", "Muskan", "Neeraj", "Nikhil", "Nikita", "Nitika", "Nupur", "Pallavi", "Parul", "Payal", "Pinky", "Pooja", "Prabh", "Rahul", "Rajesh", "Riya", "Riaan", "Richa", "Risha", "Robinson", "Rohit", "Ruchi", "Ruchi Seghal", "Samta", "Sandhiya", "Sanjana", "Shaivi", "Shalini", "Shelly", "Shilpi", "Shivani", "Silki", "Sonal", "Sonali", "Sonia", "Suangna", "Suhagana", "Sumeet", "Supriya", "Swati", "TejasVeer", "Tunisha", "Vaibhavi", "Vandana", "Vidhushi", "Vikram", "Vinod", "Vishal", "Vishakha", "Vivek", "Yashvi"], "map": {"Jijo": ["Aayushi", "Abimaniyu", "Aishwarya", "Anamik", "Anita", "Anjali", "Ankur", "Anu", "Anu Obrai", "Anuja", "Anwesha", "Apurva", "Aravind", "Babita", "Bhavna Mathur", "Bhawana", "Gitika", "Gourvi", "Ishan", "Kirthika", "Komal", "Madhu", "Manas", "Mruganayani", "Muskan", "Neeraj", "Nitika", "Nupur", "Parul", "Payal", "Pinky", "Pooja", "Rajesh", "Riaan", "Risha", "Riya", "Rohit", "Ruchi", "Ruchi Seghal", "Sandhiya", "Shaivi", "Shalini", "Shilpi", "Shivani", "Silki", "Sonal", "Sonali", "Sonia", "Suangna", "Supriya", "Swati", "Tejasveer", "Vaibhavi", "Vidhushi", "Vikram", "Vishakha", "Vishal"], "Hemanshu": ["Abuja", "Anamik", "Ankush", "Anu", "Anuja", "Arvind", "Ashwarya", "Ayushi", "Gaurvi", "Gitika", "Harsh Mother", "Komal", "Laksha", "Madhu", "Maira", "Mayank New Join", "Muskan", "Neeraj", "Nikhil", "Nikita", "Nupur", "Parul", "Payal", "Pinky", "Pooja", "Ria", "Richa", "Risha", "Sanjana", "Shelly", "Silki", "Tejasvir", "Vikram"], "Enanj": ["Aditi", "Anita", "Anjali", "Apoorva", "Chandramouli", "Divya", "Khushboo", "Kimmi", "Manas", "Manjula", "Megha", "Monika", "Prabh", "Rahul", "Rajesh", "Rohit", "Samta", "Shalini", "Shilpi", "Shivani", "Sonal", "Suhagana", "Sumeet", "Vandana", "Vinod", "Vishal"]}};
+(function(){const n=['Anu','Babita','Gaurvi','Nikhil','Nikhil son','Mayank','Alok','Gitika','Ankur','Komal','Vikram','Shelly','Mudita','Arvind','Amul'];
+n.forEach(x=>{if(!SEED.map.Hemanshu.some(y=>y.toLowerCase()==x.toLowerCase()))SEED.map.Hemanshu.push(x);if(!SEED.clients.some(y=>y.toLowerCase()==x.toLowerCase()))SEED.clients.push(x)})})();
+const ST=['Present','Absent','Leave','Weekoff'],K='wz_att_v1',$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!S)S={coaches:SEED.coaches,map:SEED.map,shifts:['Morning','Evening'],locs:['Vipul Green','Park View','Others'],recs:[]};
+S.pay=S.pay||{};if(!S.payM){S.payM={};const m0=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')})();if(Object.keys(S.pay).length)S.payM[m0]=Object.assign({},S.pay)}
+const mname=k=>{try{return new Date(k+'-01T00:00:00').toLocaleString('en-US',{month:'long',year:'numeric'})}catch(e){return k}};
+const kmon=()=>(($('#client .dt')||{}).value||new Date().toISOString().slice(0,10)).slice(0,7);
+const payOf=(n,m)=>((S.payM[m||kmon()]||{})[n])||'';
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+(function(){S.coaches=Array.isArray(S.coaches)?S.coaches:[];S.map=S.map&&typeof S.map=='object'?S.map:{};S.shifts=S.shifts||['Morning','Evening'];S.locs=S.locs||['Vipul Green','Park View','Others'];S.recs=Array.isArray(S.recs)?S.recs:[];
+const bad=x=>!x||/unique client|^Clients Names$/.test(x);
+if(!S.seeded){SEED.coaches.forEach(c=>{if(!S.coaches.includes(c))S.coaches.push(c);if(!(S.map[c]||[]).length)S.map[c]=SEED.map[c].slice()});S.seeded=1}
+S.coaches.forEach(c=>{const seen=new Set();S.map[c]=(S.map[c]||[]).map(x=>String(x).trim()).filter(x=>{const k=x.toLowerCase();if(bad(x)||seen.has(k))return false;seen.add(k);return true})});
+if(!S.h2){if(!S.coaches.includes('Hemanshu')){S.coaches.push('Hemanshu');S.map.Hemanshu=[]}
+const h=S.map.Hemanshu;['Anu','Babita','Gaurvi','Nikhil','Nikhil son','Mayank','Alok','Gitika','Ankur','Komal','Vikram','Shelly','Mudita','Arvind','Amul'].forEach(x=>{if(!h.some(y=>y.toLowerCase()==x.toLowerCase()))h.push(x)});S.h2=1}
+save()})();
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')},esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2200)};
+const opts=(a,all)=>(all?`<option value="">${all}</option>`:'')+a.map(x=>`<option>${esc(x)}</option>`).join('');
+const pct=(a,b)=>b?Math.round(a*100/b):0;
+const coachOf=n=>S.coaches.find(c=>(S.map[c]||[]).some(x=>x.toLowerCase()==n.toLowerCase()))||'';
+const coachesOf=n=>S.coaches.filter(c=>(S.map[c]||[]).some(x=>x.toLowerCase()==n.toLowerCase()));
+const nk=s=>String(s).trim().toLowerCase().replace(/\s+/g,' ');
+const lev=(a,b)=>{if(Math.abs(a.length-b.length)>1)return 9;const d=[];for(let i=0;i<=a.length;i++){d[i]=[i];}for(let j=1;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]==b[j-1]?0:1));return d[a.length][b.length]};
+function dupInfo(){const m={};S.coaches.forEach(c=>(S.map[c]||[]).forEach(n=>{const k=nk(n),o=m[k]=m[k]||{names:new Set(),coaches:new Set(),cnt:0};o.names.add(n);o.coaches.add(c);o.cnt++}));
+const ks=Object.keys(m);ks.forEach(a=>{m[a].sim=[];ks.forEach(b=>{if(a!=b&&a.length>=4&&b.length>=4&&!a.includes(' ')&&!b.includes(' ')&&lev(a,b)==1)m[a].sim.push([...m[b].names][0])})});
+Object.values(m).forEach(o=>{o.dup=o.names.size>1||o.cnt>o.coaches.size;o.shared=o.coaches.size>1&&!o.dup});return m}
+function dupBox(){const m=dupInfo(),v=Object.values(m),d=v.filter(o=>o.dup),s=v.filter(o=>o.shared),sm=v.filter(o=>o.sim.length&&!o.dup);
+const li=(a,f)=>a.length?'<ul>'+a.map(f).join('')+'</ul>':'<small>None 🎉</small>';
+$('#dupbox').innerHTML=`<b>Duplicate names (${d.length})</b>`+li(d,o=>`<li>${[...o.names].map(esc).join(' / ')} — ${[...o.coaches].join(', ')}</li>`)+`<b>Similar spellings – please check (${sm.length})</b>`+li(sm,o=>`<li>${[...o.names].map(esc).join(' / ')} ≈ ${o.sim.map(esc).join(', ')} <small>(${[...o.coaches].join(', ')})</small></li>`)+`<b>Shared by 2+ coaches (${s.length})</b>`+li(s,o=>`<li>${[...o.names].map(esc).join('')} — ${[...o.coaches].join(' + ')}</li>`)}
+const SEL=new Set(),CR={};
+const payOk=(n,p)=>{const v=payOf(n);return !p||(p=='Not set'?v==='':v==p)};
+const kList=()=>{const co=$('#kc').value,q=$('#ks').value.toLowerCase(),p=$('#kp').value;return(co=='__all'?[...new Set(S.coaches.flatMap(c=>S.map[c]||[]))]:(S.map[co]||[])).filter(n=>n.toLowerCase().includes(q)&&payOk(n,p))};
+const CT={};
+const crow=(n,sh)=>CR[n+'|'+sh]=CR[n+'|'+sh]||{date:$('#cd').value||today(),shift:sh,loc:$('#cl').value,time:CT[sh]||''};
+const sel=(i,f,a,v)=>{const A=(v===undefined||a.includes(v))?a:[...a,v];return`<select data-ri="${i}" data-f="${f}">${A.map(x=>`<option value="${esc(x)}"${x==v?' selected':''}>${esc(x)||'—'}</option>`).join('')}</select>`};
+const KT={},CC={};
+function mk(type,n,s,sh){if(type=='Coach'){const w=crow(n,sh);return{type,date:w.date,name:n,coach:n,shift:w.shift,loc:w.loc,time:w.time,status:s}}
+const kc=$('#kc').value;return{type,date:$('#client .dt').value,name:n,coach:CC[n+'|'+sh]||(kc!='__all'?kc:coachOf(n)),shift:sh,loc:$('#client .loc').value,time:KT[sh]||'',status:s,pay:payOf(n,$('#client .dt').value.slice(0,7))}}
+function setRec(type,n,s,sh){const r=mk(type,n,s,sh),k=key(r),i=S.recs.findIndex(x=>key(x)==k);if(i>=0&&S.recs[i].status==s){S.recs.splice(i,1);toast('Cleared')}else{upsert(r);toast('✔ Saved')}save();type=='Coach'?coachTab():clientTab();dash()}
+const payRecs=(n)=>{const m=kmon();S.recs.forEach(r=>{if(r.type=='Client'&&r.name==n&&r.date.startsWith(m))r.pay=payOf(n,m)})};
+const setP=(n,p)=>{const m=kmon();S.payM[m]=S.payM[m]||{};if(p)S.payM[m][n]=p;else delete S.payM[m][n]};
+function setPay(n,p){setP(n,payOf(n)==p?'':p);payRecs(n);save();toast('✔ '+n+' ('+mname(kmon())+'): '+(payOf(n)||'payment cleared'));clientTab();dash()}
+function bulkStatus(s){const A=kList().filter(n=>SEL.has(n));if(!A.length)return toast('Select clients first');const b=$('#bsh').value,SH=b=='__all'?S.shifts:[b];
+A.forEach(n=>SH.forEach(sh=>{if(s=='__clear'){const k=key(mk('Client',n,'',sh)),x=S.recs.findIndex(r=>key(r)==k);if(x>=0)S.recs.splice(x,1)}else{if($('#bco').value)CC[n+'|'+sh]=$('#bco').value;upsert(mk('Client',n,s,sh))}}));
+save();toast(s=='__clear'?'Cleared '+A.length+' client(s)':'✔ '+A.length+' marked '+s+' ('+(b=='__all'?'all shifts':b)+')');clientTab();dash()}
+function bulkPay(p){const A=kList().filter(n=>SEL.has(n));if(!A.length)return toast('Select clients first');
+A.forEach(n=>{setP(n,p);payRecs(n)});save();toast('✔ '+A.length+' → '+(p||'payment cleared')+' for '+mname(kmon()));clientTab();dash()}
+function ktop(){rf($('#bco'),'<option value="">Auto (client\'s coach)</option>'+S.coaches.map(c=>`<option>${esc(c)}</option>`).join('')+'<option value="__new">➕ Add coach…</option>');rf($('#bsh'),'<option value="__all">All shifts</option>'+S.shifts.map(s=>`<option>${esc(s)}</option>`).join(''))}
+function updSel(){const L=kList(),n=L.filter(x=>SEL.has(x)).length,c=$('#selall');$('#ksel').textContent=n+' selected';c.checked=L.length>0&&n==L.length;c.indeterminate=n>0&&n<L.length}
+const tabs=[['dash','📊 Dashboard'],['perf','📈 Performance'],['coach','🧑‍🏫 Coaches'],['client','👥 Clients'],['hist','🗓 History'],['set','⚙ Settings']];
+$('#nav').innerHTML=tabs.map(t=>`<button data-t="${t[0]}">${t[1]}</button>`).join('');
+$('#nav').onclick=e=>{const t=e.target.dataset.t;if(!t)return;$$('.sec').forEach(s=>s.classList.toggle('on',s.id==t));$$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));render()};
+const rf=(s,h)=>{const v=s.value;s.innerHTML=h;if([...s.options].some(o=>o.value==v))s.value=v};
+function fill(){$$('.shift').forEach(s=>rf(s,opts(S.shifts)));$$('.loc').forEach(s=>rf(s,opts(S.locs)));$$('.dt').forEach(d=>d.value=d.value||today());
+rf($('#kc'),'<option value="__all">👥 All clients (everyone)</option>'+opts(S.coaches));if(!window.__kcInit&&S.coaches.length){window.__kcInit=1;$('#kc').value=S.coaches[0]}rf($('#hc'),opts(S.coaches,'All'));rf($('#nkc'),'<option value="">Coach: as per filter</option>'+opts(S.coaches));rf($('#rc'),opts(S.coaches,'All'));rf($('#crl'),opts(S.locs,'All'));rf($('#hl'),opts(S.locs,'All'));rf($('#hs'),opts(ST,'All'));rf($('#dl'),opts(S.locs,'All locations'));if(!$('#dm').value)$('#dm').value=today().slice(0,7)}
+const key=(r)=>[r.type,r.date,r.name,r.shift,r.loc].join('|');
+function upsert(r){const k=key(r),i=S.recs.findIndex(x=>key(x)==k);i<0?S.recs.push(r):S.recs[i]=r}
+function dash0(){const F=$('#df').value||'0000-00-00',T=$('#dt2').value||'9999-99-99',l=$('#dl').value,R=S.recs.filter(r=>r.date>=F&&r.date<=T&&(!l||r.loc==l)),t=today(),C=R.filter(r=>r.type=='Coach'),K2=R.filter(r=>r.type=='Client');
+const c=(a,s)=>a.filter(r=>r.status==s).length,td=S.recs.filter(r=>r.date==t&&r.type=='Client'),u=s=>new Set(td.filter(r=>r.status==s).map(r=>r.name.toLowerCase())).size;
+$('#kpis').innerHTML=[['Clients on roll',[...new Set(Object.values(S.map).flat())].length],['Coaches',S.coaches.length],['Today clients present',u('Present')],['Today absent',u('Absent')],['Client attendance %',pct(c(K2,'Present'),K2.length-c(K2,'Weekoff'))+'%'],['Coach attendance %',pct(c(C,'Present'),C.length-c(C,'Weekoff'))+'%'],['Unpaid entries',K2.filter(r=>r.pay=='Unpaid').length],['Leaves (period)',c(R,'Leave')]].map(x=>`<div class="kpi"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+const bars=(rows)=>rows.map(x=>`<div class="bl"><span>${esc(x[0])}</span><div class="bar"><i style="width:${x[1]}%"></i></div><span>${x[1]}% <small>(${x[2]})</small></span></div>`).join('')||'<small>No data</small>';
+$('#cb').innerHTML=bars(S.coaches.map(n=>{const a=C.filter(r=>r.name==n);return[n,pct(c(a,'Present'),a.length-c(a,'Weekoff')),c(a,'Present')+'/'+a.length]}));
+$('#clb').innerHTML=bars(S.coaches.map(n=>{const a=K2.filter(r=>r.coach==n);return[n,pct(c(a,'Present'),a.length-c(a,'Weekoff')),c(a,'Present')+'/'+a.length]}));
+const d={};K2.forEach(r=>{d[r.date]=d[r.date]||[0,0];d[r.date][1]++;if(r.status=='Present')d[r.date][0]++});
+$('#tr').innerHTML=bars(Object.keys(d).sort().slice(-14).map(k=>[k.slice(5),pct(d[k][0],d[k][1]),d[k][0]+'/'+d[k][1]]));
+const ab={};K2.filter(r=>r.status=='Absent').forEach(r=>ab[r.name]=(ab[r.name]||0)+1);
+$('#ab').innerHTML=Object.entries(ab).sort((a,b)=>b[1]-a[1]).slice(0,10).map(x=>`<div class="bl"><span>${esc(x[0])}</span><div class="bar"><i style="width:${Math.min(100,x[1]*15)}%;background:var(--no)"></i></div><span>${x[1]}</span></div>`).join('')||'<small>No absences 🎉</small>'}
+const stBtns=(id,cur,sh)=>`<span class="st" data-id="${esc(id)}"${sh?` data-sh="${esc(sh)}"`:''}>${ST.map(s=>`<button class="${s}${cur==s?' on':''}" data-s="${s}">${s}</button>`).join('')}</span>`;
+function ctop(){}
+function coachTab(){try{crep()}catch(e){console.error(e)}const SH=S.shifts;
+$('#cbody').innerHTML=S.coaches.map((n,i)=>SH.map((sh,j)=>{const w=crow(n,sh),r=S.recs.find(x=>key(x)==key({type:'Coach',date:w.date,name:n,shift:sh,loc:w.loc})),e=esc(n),inp=(f,t)=>`<input type="${t}" data-cr="${e}" data-sh="${esc(sh)}" data-f="${f}" value="${esc(w[f]||'')}">`,ls=S.locs.includes(w.loc)?S.locs:[...S.locs,w.loc],lc=`<select data-cr="${e}" data-sh="${esc(sh)}" data-f="loc">${ls.map(x=>`<option${x==w.loc?' selected':''}>${esc(x)}</option>`).join('')}</select>`;
+const first=j==0?`<td rowspan="${SH.length}" style="vertical-align:middle">${i+1}</td><td rowspan="${SH.length}" style="vertical-align:middle"><b>${e}</b><br><small style="color:var(--m)">${(S.map[n]||[]).length} clients</small></td>`:'',last=j==0?`<td rowspan="${SH.length}" style="vertical-align:middle"><button class="btn s" data-ec="${e}">✎ Edit</button> <button class="btn s r" data-del="${e}">✕</button><br><button class="btn s g" data-wc="${e}" style="margin-top:4px">📲 WhatsApp</button> <button class="btn s" data-ph="${e}">📱</button></td>`:'';
+return`<tr${j==0?' style="border-top:3px solid var(--g)"':''}>${first}<td><b>${j==0?'🌅':'🌙'} ${esc(sh)}</b></td><td>${inp('date','date')}</td><td>${lc}</td><td>${stBtns(n,r?r.status:'',sh)}</td>${last}</tr>`}).join('')).join('')}
+S.phones=S.phones||{};
+const cst=(c,d,sh)=>S.recs.find(x=>x.type=='Coach'&&x.date==d&&x.name==c&&x.shift==sh);
+function cstat(c,d,sh){const m={};S.recs.forEach(r=>{if(r.type=='Client'&&r.date==d&&r.shift==sh)m[r.name.toLowerCase()]=r});
+const mine=Object.values(m).filter(r=>(r.coach||coachOf(r.name))==c),by=s=>mine.filter(r=>r.status==s).map(r=>r.name),um=(S.map[c]||[]).filter(x=>!m[x.toLowerCase()]),P=by('Present'),A=by('Absent'),Lv=by('Leave'),W=by('Weekoff');
+return{total:mine.length+um.length,P:P.length,A:A.length,L:Lv.length,W:W.length,U:um.length,pn:P,abs:A,ln:Lv,wn:W,unmarked:um}}
+const sic=j=>j==0?'🌅':'🌙',sico={Present:'✅',Absent:'❌',Leave:'🔶',Weekoff:'⚪'};
+function coachBlock(c,d){const L=['*'+c+'*'];S.shifts.forEach((sh,j)=>{const r=cst(c,d,sh);L.push(`${sic(j)} ${sh}: ${r?(sico[r.status]||'')+' '+r.status+(r.time?' · '+r.time:'')+(r.loc?' · '+r.loc:''):'⏳ Not marked'}`)});
+S.shifts.forEach((sh,j)=>{const s=cstat(c,d,sh);L.push('',`${sic(j)} *Clients – ${sh}* (${s.total})`);
+[['✅ Present',s.pn],['❌ Absent',s.abs],['🟠 Leave',s.ln],['⚪ Weekoff',s.wn],['⏳ Not marked',s.unmarked]].forEach(([t,a])=>{if(a.length)L.push(`${t} (${a.length}): ${a.join(', ')}`)});if(!s.total)L.push('No clients')});
+const up=(S.map[c]||[]).filter(x=>payOf(x,d.slice(0,7))=='Unpaid');if(up.length)L.push('','💰 Unpaid: '+up.join(', '));return L.join('\n')}
+const msgCoach=(c,d)=>'*Winning Zone – Attendance*\n📅 '+d+LEG+'\n\nHi '+c+', here is your attendance and your clients\' details:\n\n'+coachBlock(c,d);
+const msgAll=d=>'*Winning Zone – Daily Attendance*\n📅 '+d+LEG+'\n\n'+S.coaches.map(c=>coachBlock(c,d)).join('\n\n');
+const LEG='\n✅ Present · ❌ Absent · 🔶 Leave · ⚪ Weekoff';
+const wx=t=>String(t).replace(/\u{1F9D1}\u200D\u{1F3EB}/gu,'\u{1F4AA}').replace(/\u{1F7E0}/gu,'\u{1F536}').replace(/\u26A0\uFE0F?/g,'\u{1F6A9}').replace(/\u{1F642}/gu,'\u{1F44D}').replace(/\uFE0F|\u200D/g,'');
+const waOpen=(msg,phone)=>{let p=(phone||'').replace(/\D/g,'');if(p.length==10)p='91'+p;window.open('https://api.whatsapp.com/send?'+(p?'phone='+p+'&':'')+'text='+encodeURIComponent(wx(msg)))};
+function pend(d){let n=0;S.coaches.forEach(c=>S.shifts.forEach(sh=>{if(!cst(c,d,sh))n++;n+=cstat(c,d,sh).U}));return n}
+const nl=s=>'<div class="nl">'+[['✅ Present','P',s.pn]].filter(x=>x[2].length).map(x=>`<div class="g ${x[1]}"><b>${x[0]} (${x[2].length})</b><br>${x[2].map(n=>'<i>'+esc(n)+'</i>').join('')}</div>`).join('')+'</div>';
+function todayCard(){const d=$('#td').value||today(),p=pend(d);
+const rows=S.coaches.map(c=>{const cells=S.shifts.map((sh,j)=>{const r=cst(c,d,sh),s=cstat(c,d,sh);return`<td>${sic(j)} ${r?`<span class="tag ${r.status}">${r.status}</span>`:'<b style="color:var(--no)">⏳ Not marked</b>'}<br><small>Clients ✅${s.P} ❌${s.A} 🟠${s.L} ⚪${s.W} <b style="color:${s.U?'var(--no)':'var(--ok)'}">⏳${s.U}</b></small>${nl(s)}</td>`}).join('');
+return`<tr><td><b>${esc(c)}</b><br><small style="color:var(--m)">${S.phones[c]?'📱 '+esc(S.phones[c]):'no number'}</small></td>${cells}<td><button class="btn s g" data-wc="${esc(c)}">📲 Send</button> <button class="btn s" data-ph="${esc(c)}">📱</button></td></tr>`}).join('');
+$('#tcard').innerHTML=`<div style="padding:10px;border-radius:8px;margin-bottom:8px;font-weight:600;background:${p?'#ffe3e3':'#e0f5e9'};color:${p?'var(--no)':'var(--ok)'}">${p?'⚠ '+p+' attendance entries are still pending for '+d:'✔ All attendance is marked for '+d}</div><div class="sc"><table><thead><tr><th>Coach</th>${S.shifts.map((s,j)=>`<th>${sic(j)} ${esc(s)}</th>`).join('')}<th>WhatsApp</th></tr></thead><tbody>${rows}</tbody></table></div>`}
+function sendCoach(c,d){waOpen(msgCoach(c,d),S.phones[c])}
+function setPhone(c){const v=prompt('WhatsApp number for '+c+' (with country code, e.g. 919876543210)',S.phones[c]||'');if(v===null)return;if(v.trim())S.phones[c]=v.trim();else delete S.phones[c];save();dash();coachTab();toast('✔ Saved')}
+
+function dash(){dash0();try{todayCard()}catch(e){console.error(e)}try{rep()}catch(e){console.error(e)}}
+function clientTab(){const d=$('#client .dt').value,lc=$('#client .loc').value,L=kList(),all=$('#kc').value=='__all',M=dupInfo(),SH=S.shifts,ic=j=>j==0?'🌅':'🌙';
+$('#kh').innerHTML=`<tr><th><input type="checkbox" id="selall" title="Select all shown"></th><th>#</th><th>Client</th><th>Coach</th><th>Payment<br><small>${mname(kmon())}</small></th>${SH.map((s,j)=>`<th>${ic(j)} ${esc(s)}</th>`).join('')}<th>Edit / Remove</th></tr>`;
+$('#pmon').textContent=mname(kmon());$('#kcount').textContent=L.length+' clients'+(all?' (all coaches)':'');
+$('#kbody').innerHTML=L.length?L.map((n,i)=>{const p=payOf(n),e=esc(n),o=M[nk(n)]||{names:new Set(),coaches:new Set(),sim:[]},cs=coachesOf(n),cls=o.dup?'dup':o.sim.length?'sim':cs.length>1?'shared':'',fl=(o.dup?'<span class="fl d">Duplicate</span>':'')+(!o.dup&&o.sim.length?`<span class="fl sm" title="${esc(o.sim.join(', '))}">≈ ${esc(o.sim[0])}</span>`:'')+(cs.length>1?'<span class="fl sh">Shared</span>':'');
+const sc=SH.map(sh=>{const r=S.recs.find(x=>key(x)==key({type:'Client',date:d,name:n,shift:sh,loc:lc})),cur=r?(r.coach||coachOf(n)):(CC[n+'|'+sh]||(all?coachOf(n):$('#kc').value)),own=coachesOf(n),ord=[...own,...S.coaches.filter(c=>!own.includes(c))];if(cur&&!ord.includes(cur))ord.push(cur);
+return`<td>${stBtns(n,r?r.status:'',sh)}<br><select class="cco" data-cc="${e}" data-sh="${esc(sh)}" title="Coach who trained this session">${ord.map(c=>`<option${c==cur?' selected':''}>${esc(c)}</option>`).join('')}<option value="__new">➕ Add coach…</option></select></td>`}).join('');
+return`<tr class="${cls}"><td><input type="checkbox" data-sel="${e}"${SEL.has(n)?' checked':''}></td><td>${i+1}</td><td>${e}${fl}</td><td>${cs.map(c=>`<span class="cb">${esc(c)}</span>`).join('')}</td><td><span class="pp" data-id="${e}"><button class="pP${p=='Paid'?' on':''}" data-p="Paid">Paid</button><button class="pU${p=='Unpaid'?' on':''}" data-p="Unpaid">Unpaid</button></span>${p?'':'<span class="nopay">not set</span>'}</td>${sc}<td><button class="btn s g" data-ac="${e}" title="Assign to one or both coaches">👥 Coaches</button> <button class="btn s" data-ek="${e}">✎</button> <button class="btn s r" data-dk="${e}">✕</button></td></tr>`}).join(''):`<tr><td colspan="${6+SH.length}">No clients match. Use <b>Add client</b> below, change the filters, or go to Settings → <b>Reload client lists from Excel</b>.</td></tr>`;updSel()}
+const hRecs=()=>{const f=id=>$(id).value,m=f('#hm'),d=f('#hd'),c=f('#hc'),n=f('#hn').toLowerCase();return S.recs.filter(r=>(!f('#ht')||r.type==f('#ht'))&&(!d||r.date==d)&&(!m||r.date.startsWith(m))&&(!c||(r.coach||(r.type=='Coach'?r.name:''))==c)&&(!f('#hl')||r.loc==f('#hl'))&&(!f('#hs')||r.status==f('#hs'))&&(r.type!='Client'||payOk(r.name,'')&&(!f('#hp')||(f('#hp')=='Not set'?!r.pay:r.pay==f('#hp'))))&&(!f('#hp')||r.type=='Client')&&(!n||r.name.toLowerCase().includes(n))).sort((a,b)=>b.date.localeCompare(a.date))};
+const view=hRecs;
+function hist(){const R=hRecs(),ix=new Map(S.recs.map((r,i)=>[r,i]));$('#hcount').textContent=R.length+' record(s) — showing all';
+const row=r=>{const i=ix.get(r),C=r.type=='Client';return`<tr><td><input type="date" data-ri="${i}" data-f="date" value="${r.date}"></td><td>${r.type}</td><td>${esc(r.name)}</td><td>${C?sel(i,'coach',['',...S.coaches],r.coach||''):esc(r.coach||'')}</td><td>${sel(i,'shift',S.shifts,r.shift)}</td><td>${sel(i,'loc',S.locs,r.loc)}</td><td>${C?sel(i,'pay',['','Paid','Unpaid'],r.pay||''):''}</td><td>${sel(i,'status',ST,r.status)}</td><td><button class="btn s r" data-rd="${i}">✕</button></td></tr>`};
+let h='';if($('#hv').value=='coach'){const g={};R.forEach(r=>{const c=r.coach||(r.type=='Coach'?r.name:'Unassigned');(g[c]=g[c]||[]).push(r)});
+[...S.coaches,...Object.keys(g).filter(c=>!S.coaches.includes(c))].filter(c=>g[c]).forEach(c=>{const a=g[c],n=s=>a.filter(r=>r.status==s).length;h+=`<tr class="grp"><td colspan="10">🧑‍🏫 ${esc(c)} — ${a.length} records · Present ${n('Present')} · Absent ${n('Absent')} · Leave ${n('Leave')} · Weekoff ${n('Weekoff')}</td></tr>`+a.map(row).join('')})}else h=R.map(row).join('');
+$('#hbody').innerHTML=h||'<tr><td colspan="10">No records</td></tr>'}
+function render(){[fill,ktop,dash,ctop,coachTab,clientTab,hist,dupBox,perf].forEach(f=>{try{f()}catch(e){console.error(e)}})}
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const st=b.closest('.st'),pp=b.closest('.pp'),D=b.dataset;
+if(st&&D.s)setRec(b.closest('#coach')?'Coach':'Client',st.dataset.id,D.s,st.dataset.sh);
+if(pp&&D.p)setPay(pp.dataset.id,D.p);
+if(D.rd&&confirm('Remove this record?')){S.recs.splice(+D.rd,1);save();hist();dash();coachTab();clientTab();toast('Removed')}
+if(D.ac){MN=D.ac;$('#mt').textContent='Coaches for '+MN;$('#mb').innerHTML=S.coaches.map(c=>`<label><input type="checkbox" data-mc="${esc(c)}"${coachesOf(MN).includes(c)?' checked':''}> ${esc(c)}</label>`).join('')+'<small style="color:var(--m)">Tick two coaches when both train this client.</small>';$('#modal').style.display='flex'}
+if(D.wc)sendCoach(D.wc,b.closest('#coach')?$('#cd').value:$('#td').value);
+if(D.ph)setPhone(D.ph);
+if(D.bs)bulkStatus(D.bs);
+if(D.bp!==undefined)bulkPay(D.bp);
+if(D.sa!==undefined){const A=kList();D.sa=='1'?A.forEach(n=>SEL.add(n)):A.forEach(n=>SEL.delete(n));clientTab()}
+if(D.del&&confirm('Remove coach '+D.del+' and their client list? Attendance history is kept.')){S.coaches=S.coaches.filter(x=>x!=D.del);delete S.map[D.del];save();render();toast('Removed')}
+if(D.ec){const o=D.ec,v=(prompt('Edit coach name',o)||'').trim();if(v&&v!=o&&!S.coaches.includes(v)){S.coaches=S.coaches.map(x=>x==o?v:x);S.map[v]=S.map[o];if(S.phones[o]){S.phones[v]=S.phones[o];delete S.phones[o]}delete S.map[o];S.recs.forEach(r=>{if(r.coach==o)r.coach=v;if(r.type=='Coach'&&r.name==o)r.name=v});if($('#kc').value==o)$('#kc').value=v;Object.keys(CR).forEach(k=>delete CR[k]);Object.keys(CC).forEach(k=>delete CC[k]);save();render();toast('✔ Updated')}}
+if(D.ek){const o=D.ek,v=(prompt('Edit client name',o)||'').trim();if(v&&v!=o){S.coaches.forEach(c=>S.map[c]=S.map[c].map(x=>x==o?v:x));Object.values(S.payM).forEach(m=>{if(m[o]){m[v]=m[o];delete m[o]}});S.recs.forEach(r=>{if(r.type=='Client'&&r.name==o)r.name=v});save();render();toast('✔ Updated')}}
+if(D.dk){const n=D.dk,co=$('#kc').value;if(confirm('Remove '+n+(co=='__all'?' from all coaches?':' from '+co+'?')+' Attendance history is kept.')){S.coaches.forEach(c=>{if(co=='__all'||c==co)S.map[c]=S.map[c].filter(x=>x!=n)});save();render();toast('Removed')}}});
+document.addEventListener('change',e=>{const t=e.target,D=t.dataset;
+if(D.cc!==undefined){let cv=t.value,nw=0;if(cv=='__new'){cv=newCoach();nw=1;if(!cv){clientTab();return}}CC[D.cc+'|'+D.sh]=cv;const k=key({type:'Client',date:$('#client .dt').value,name:D.cc,shift:D.sh,loc:$('#client .loc').value}),r=S.recs.find(x=>key(x)==k);if(r){r.coach=cv;save();dash();hist()}toast('✔ Coach: '+cv+(r?'':' (applies when marked)'));if(nw)render();return}
+if(D.kt!==undefined){KT[D.kt]=t.value;toast('Time set for '+D.kt+' — applies to next marks');return}
+if(D.ct!==undefined){CT[D.ct]=t.value;S.coaches.forEach(n=>crow(n,D.ct).time=t.value);
+;coachTab();return}
+if(D.cr!==undefined){const w=crow(D.cr,D.sh);w[D.f]=t.value;if(D.f=='time'){const r=S.recs.find(x=>key(x)==key({type:'Coach',date:w.date,name:D.cr,shift:D.sh,loc:w.loc}));if(r){r.time=t.value;save();toast('✔ Time updated')}}coachTab();return}
+if(D.sel!==undefined){t.checked?SEL.add(D.sel):SEL.delete(D.sel);updSel();return}
+if(t.id=='selall'){kList().forEach(n=>t.checked?SEL.add(n):SEL.delete(n));clientTab();return}
+if(D.ri===undefined)return;const r=S.recs[+D.ri];if(!r)return;if(D.f=='date'&&!t.value){hist();return}
+r[D.f]=t.value;const k=key(r),dup=S.recs.findIndex(x=>x!==r&&key(x)==k);if(dup>=0){S.recs.splice(dup,1);toast('✔ Corrected (merged with duplicate)')}else toast('✔ Corrected');
+save();hist();dash();coachTab();clientTab()});
+[['#cd','date'],['#cl','loc']].forEach(([id,f])=>$(id).onchange=()=>{S.coaches.forEach(n=>S.shifts.forEach(sh=>crow(n,sh)[f]=$(id).value));coachTab()});
+['#client .dt','#client .loc','#kp'].forEach(s=>$(s).onchange=clientTab);$('#kc').onchange=()=>{Object.keys(CC).forEach(k=>delete CC[k]);SEL.clear();clientTab()};
+let MN='';$('#mcancel').onclick=()=>$('#modal').style.display='none';
+$('#msave').onclick=()=>{const ch=$$('#mb input').filter(x=>x.checked).map(x=>x.dataset.mc);if(!ch.length)return toast('Select at least one coach');
+S.coaches.forEach(c=>{const L=S.map[c]=S.map[c]||[],has=L.some(x=>x.toLowerCase()==MN.toLowerCase());if(ch.includes(c)&&!has)L.push(MN);if(!ch.includes(c)&&has)S.map[c]=L.filter(x=>x.toLowerCase()!=MN.toLowerCase())});
+save();$('#modal').style.display='none';render();toast('✔ '+MN+' → '+ch.join(' + '))};
+$('#ks').oninput=clientTab;['#ht','#hd','#hm','#hc','#hl','#hs','#hn','#hp','#hv'].forEach(s=>$(s).oninput=hist);$('#dm').oninput=$('#dl').oninput=dash;
+$('#hclr').onclick=()=>{['#ht','#hd','#hm','#hc','#hl','#hs','#hn','#hp'].forEach(s=>$(s).value='');hist()};
+$('#addc').onclick=()=>{const v=$('#nc').value.trim();if(v&&!S.coaches.includes(v)){S.coaches.push(v);S.map[v]=[];save();$('#nc').value='';render()}};
+$('#addk').onclick=()=>{const v=$('#nk').value.trim();let c=$('#nkc').value||$('#kc').value;if(!v)return;if(c=='__all'){c=(prompt('Add to which coach? '+S.coaches.join(' / '))||'').trim();if(!S.coaches.includes(c))return toast('Coach not found')}
+S.map[c]=S.map[c]||[];if(S.map[c].some(x=>x.toLowerCase()==v.toLowerCase()))return toast('⚠ '+v+' is already in '+c+"'s list");
+const o=coachesOf(v);if(o.length&&!confirm(v+' is already with '+o.join(', ')+'.\nAdd to '+c+' as well (shared client)?'))return;
+S.map[c].push(v);save();$('#nk').value='';render();toast('✔ Added'+(o.length?' (shared)':''))};
+$('#as').onclick=()=>{const v=$('#ns').value.trim();if(v){S.shifts.push(v);save();$('#ns').value='';render()}};
+$('#al').onclick=()=>{const v=$('#nl').value.trim();if(v){S.locs.push(v);save();$('#nl').value='';render()}};
+$('#td').onchange=todayCard;$('#wcopy').onclick=()=>{const t=msgAll($('#td').value||today());(navigator.clipboard?navigator.clipboard.writeText(wx(t)):Promise.reject()).then(()=>toast('✔ Report copied'),()=>toast('Copy not allowed here'))};$('#wall').onclick=()=>waOpen(msgAll($('#td').value||today()));
+const wa=R=>{const L=['*Winning Zone Attendance*',''];const g={};R.forEach(r=>(g[r.date]=g[r.date]||[]).push(r));Object.keys(g).sort().forEach(d=>{L.push('📅 '+d);g[d].forEach(r=>L.push(`${r.type=='Coach'?'🧑‍🏫':'👤'} ${r.name} – ${r.status} (${r.shift}, ${r.loc})`))});let t=L.join('\n');if(t.length>3500){t=t.slice(0,3500).replace(/\n[^\n]*$/,'')+'\n… (trimmed – use Excel for full data)';toast('Message trimmed for WhatsApp limit')}window.open('https://api.whatsapp.com/send?text='+encodeURIComponent(wx(t)))};
+$('#wa1').onclick=()=>wa(view());$('#wa2').onclick=()=>wa(S.recs);
+const nmRows=R=>{const m={};R.forEach(r=>{const mo=r.date.slice(0,7),k=mo+'|'+r.type+'|'+r.name,o=m[k]=m[k]||{Month:mo,Type:r.type,Name:r.name,Present:0,Absent:0,Leave:0,Weekoff:0,Total:0};o[r.status]++;o.Total++});return Object.values(m).map(o=>({...o,'Att %':pct(o.Present,o.Total-o.Weekoff)})).sort((a,b)=>a.Month.localeCompare(b.Month)||b.Type.localeCompare(a.Type)||a.Name.localeCompare(b.Name))};
+const xl=(R,fn)=>{const w=XLSX.utils.book_new(),add=(r,n)=>XLSX.utils.book_append_sheet(w,XLSX.utils.json_to_sheet(r),n);
+add(R.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.name.localeCompare(b.name)).map(r=>({Date:r.date,Type:r.type,Name:r.name,Coach:r.coach,Payment:r.pay||'',Shift:r.shift,Location:r.loc,Time:r.time||'',Attendance:r.status})),'All Data');
+const N=nmRows(R);add(N,'Name x Month');[...new Set(N.map(x=>x.Month))].forEach(mo=>add(N.filter(x=>x.Month==mo).map(({Month,...o})=>o),mo));
+XLSX.writeFile(w,fn||'WinningZone_Attendance.xlsx')};
+$('#x1').onclick=()=>xl(view());$('#x2').onclick=()=>xl(S.recs);
+$('#bk').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='wz_backup_'+today()+'.json';a.click()};
+$('#rs').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);if(d.recs&&d.coaches){S=d;S.phones=S.phones||{};S.pay=S.pay||{};S.payM=S.payM||{};S.shifts=S.shifts||['Morning','Evening'];S.locs=S.locs||['Vipul Green','Park View','Others'];S.map=S.map||{};S.seeded=1;S.h2=1;save();render();toast('Restored')}else toast('Invalid file')}catch(x){toast('Invalid file')}})};
+$('#rl').onclick=()=>{let n=0;SEED.coaches.forEach(c=>{if(!S.coaches.includes(c)){S.coaches.push(c);S.map[c]=[]}SEED.map[c].forEach(x=>{if(!S.map[c].includes(x)){S.map[c].push(x);n++}})});save();render();toast('✔ '+n+' client(s) restored')};
+$('#clr').onclick=()=>{if(confirm('Delete ALL attendance records?')){S.recs=[];save();render()}};
+
+const pad=n=>String(n).padStart(2,'0'),iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+function range(k,ref){const d=ref?new Date(ref+'T00:00:00'):new Date();let a,b;
+if(k=='week'){a=new Date(d);a.setDate(d.getDate()-(d.getDay()+6)%7);b=new Date(a);b.setDate(a.getDate()+6)}
+else if(k=='month'){a=new Date(d.getFullYear(),d.getMonth(),1);b=new Date(d.getFullYear(),d.getMonth()+1,0)}
+else if(k=='quarter'){const q=Math.floor(d.getMonth()/3)*3;a=new Date(d.getFullYear(),q,1);b=new Date(d.getFullYear(),q+3,0)}
+else{a=new Date(d.getFullYear(),0,1);b=new Date(d.getFullYear(),11,31)}
+return[iso(a),iso(b)]}
+const PQ=[['week','Weekly'],['month','Monthly'],['quarter','Quarterly'],['year','Yearly']].map(x=>`<button class="btn s" data-q="${x[0]}">${x[1]}</button>`).join('');
+function newCoach(){const v=(prompt('New coach name')||'').trim();if(!v)return'';if(!S.coaches.some(c=>c.toLowerCase()==v.toLowerCase())){S.coaches.push(v);S.map[v]=[];save()}return S.coaches.find(c=>c.toLowerCase()==v.toLowerCase())}
+const SL={Present:'P',Absent:'A',Leave:'L',Weekoff:'W'};
+const repRows=R=>{const m={};R.forEach(r=>{const k=r.type+'|'+r.name,o=m[k]=m[k]||{type:r.type,name:r.name,co:new Set(),Present:0,Absent:0,Leave:0,Weekoff:0,n:0};if(r.type=='Client'&&r.coach)o.co.add(r.coach);o[r.status]++;o.n++});return Object.values(m).map(o=>({...o,pct:pct(o.Present,o.n-o.Weekoff)})).sort((a,b)=>b.type.localeCompare(a.type)||a.name.localeCompare(b.name))};
+let LR=[],LF='',LT='';
+function rep(){const F=$('#df').value||'0000-00-00',T=$('#dt2').value||'9999-99-99',l=$('#dl').value,t=$('#rt').value,c=$('#rc').value;
+LR=S.recs.filter(r=>r.date>=F&&r.date<=T&&(!l||r.loc==l)&&(!t||r.type==t)&&(!c||(r.coach||(r.type=='Coach'?r.name:''))==c));LF=F;LT=T;
+const A=repRows(LR);$('#rcount').textContent=A.length+' names · '+LR.length+' records';
+$('#rbody').innerHTML=A.map(o=>`<tr><td>${o.type}</td><td>${esc(o.name)}</td><td>${[...o.co].map(esc).join(', ')}</td><td>${o.Present}</td><td>${o.Absent}</td><td>${o.Leave}</td><td>${o.Weekoff}</td><td>${o.n}</td><td><b>${o.pct}%</b></td></tr>`).join('')||'<tr><td colspan="9">No records in this period</td></tr>'}
+function cdat(){const F=$('#cf').value||'0000-00-00',T=$('#ct2').value||'9999-99-99',l=$('#crl').value,SH=S.shifts,R=S.recs.filter(r=>r.type=='Coach'&&r.date>=F&&r.date<=T&&(!l||r.loc==l)).sort((a,b)=>a.date.localeCompare(b.date)),names=[...S.coaches,...[...new Set(R.map(r=>r.name))].filter(n=>!S.coaches.includes(n))];
+const sum=names.map(n=>{const o={Coach:n};let p=0,w=0,t=0;SH.forEach(sh=>ST.forEach(s=>{const v=R.filter(r=>r.name==n&&r.shift==sh&&r.status==s).length;o[sh+' '+s]=v;t+=v;if(s=='Present')p+=v;if(s=='Weekoff')w+=v}));o['Total Present']=p;o['Att %']=pct(p,t-w);return o});
+const dates=[...new Set(R.map(r=>r.date))];
+const mx=dates.map(d=>{const o={Date:d};names.forEach(n=>SH.forEach(sh=>{const r=R.find(x=>x.date==d&&x.name==n&&x.shift==sh);o[n+' – '+sh]=r?r.status:''}));return o});
+return{F,T,SH,R,names,sum,mx,dates}}
+function crep(){const D=cdat(),SH=D.SH,names=D.names;
+$('#cs').innerHTML=`<div class="sc rp"><table><thead><tr><th rowspan="2">Coach</th>${SH.map((s,j)=>`<th colspan="4" style="text-align:center">${sic(j)} ${esc(s)}</th>`).join('')}<th rowspan="2">Total P</th><th rowspan="2">Att %</th></tr><tr>${SH.map(()=>'<th>P</th><th>A</th><th>L</th><th>W</th>').join('')}</tr></thead><tbody>${D.sum.map(o=>`<tr><td><b>${esc(o.Coach)}</b></td>${SH.map(sh=>ST.map(s=>`<td>${o[sh+' '+s]}</td>`).join('')).join('')}<td>${o['Total Present']}</td><td><b>${o['Att %']}%</b></td></tr>`).join('')}</tbody></table></div>`;
+$('#cinfo').textContent=D.R.length+' records · '+D.dates.length+' day(s)';
+$('#cm').innerHTML=D.dates.length?`<div class="sc mx"><table><thead><tr><th rowspan="2">Date</th>${names.map(n=>`<th colspan="${SH.length}">${esc(n)}</th>`).join('')}</tr><tr>${names.map(()=>SH.map((s,j)=>`<th>${sic(j)}</th>`).join('')).join('')}</tr></thead><tbody>${D.dates.map(d=>`<tr><td>${d}</td>${names.map(n=>SH.map(sh=>{const r=D.R.find(x=>x.date==d&&x.name==n&&x.shift==sh);return r?`<td><span class="tag ${r.status}" title="${esc(r.status+(r.time?' · '+r.time:'')+(r.loc?' · '+r.loc:''))}">${SL[r.status]}</span></td>`:'<td>·</td>'}).join('')).join('')}</tr>`).join('')}</tbody></table></div><small style="color:var(--m)">P Present · A Absent · L Leave · W Weekoff · 🌅 Morning · 🌙 Evening</small>`:'<small>No coach attendance in this period</small>'}
+$('#cx').onclick=()=>{const D=cdat(),w=XLSX.utils.book_new(),add=(r,n)=>XLSX.utils.book_append_sheet(w,XLSX.utils.json_to_sheet(r),n);add(D.sum,'Summary');add(D.mx,'Day-wise');add(D.R.map(r=>({Date:r.date,Coach:r.name,Shift:r.shift,Time:r.time||'',Location:r.loc,Status:r.status})),'Records');XLSX.writeFile(w,'WinningZone_Coach_'+D.F+'_to_'+D.T+'.xlsx')};
+$('#rx').onclick=()=>xl(LR,'WinningZone_Report_'+LF+'_to_'+LT+'.xlsx');
+$('#addcc').onclick=()=>{const v=newCoach();if(v){render();toast('✔ Coach ready: '+v)}};
+$('#bco').onchange=()=>{if($('#bco').value=='__new'){const v=newCoach();render();$('#bco').value=v||''}};
+document.addEventListener('click',e=>{const b=e.target.closest('.pq button');if(!b)return;const g=b.parentElement.dataset.for,[fi,ti]=g=='dash'?['#df','#dt2']:['#cf','#ct2'],f=$(fi).value,t=$(ti).value,td=today(),ref=((f&&t&&td>=f&&td<=t)||!f)?td:f,[a,z]=range(b.dataset.q,ref);$(fi).value=a;$(ti).value=z;if(g=='dash'){$('#dm').value=a.slice(0,7);dash()}else crep()});
+$('#dm').addEventListener('input',()=>{if(!$('#dm').value)return;const[a,z]=range('month',$('#dm').value+'-01');$('#df').value=a;$('#dt2').value=z;dash()});
+['#df','#dt2','#rt','#rc'].forEach(x=>$(x).oninput=dash);['#cf','#ct2','#crl'].forEach(x=>$(x).oninput=crep);
+
+/* ===== EXCEL IMPORT / EXPORT (Coaches, Clients, History) ===== */
+const dlx=(sh,fn)=>{const w=XLSX.utils.book_new();sh.forEach(([n,r])=>XLSX.utils.book_append_sheet(w,XLSX.utils.json_to_sheet(r.length?r:[{Info:'No data'}]),n));XLSX.writeFile(w,fn)};
+const recRow=r=>({Date:r.date,Type:r.type,Name:r.name,Coach:r.coach||'',Shift:r.shift,Location:r.loc,Time:r.time||'',Payment:r.pay||'',Attendance:r.status});
+const nst=v=>{v=String(v||'').trim().toLowerCase();return v[0]=='p'?'Present':v[0]=='a'?'Absent':v[0]=='l'?'Leave':v[0]=='w'?'Weekoff':''};
+const nd=v=>{if(v===''||v==null)return'';if(typeof v=='number'){const d=new Date(Math.round((v-25569)*864e5));return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate())}
+v=String(v).trim();let m=v.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);if(m)return m[1]+'-'+pad(+m[2])+'-'+pad(+m[3]);
+m=v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/);return m?(m[3].length==2?'20'+m[3]:m[3])+'-'+pad(+m[2])+'-'+pad(+m[1]):''};
+const coachN=n=>{let c=S.coaches.find(x=>x.toLowerCase()==n.toLowerCase());if(!c){c=n;S.coaches.push(c);S.map[c]=[]}S.map[c]=S.map[c]||[];return c};
+const addTo=(c,n)=>{if(!S.map[c].some(x=>x.toLowerCase()==n.toLowerCase())){S.map[c].push(n);return 1}return 0};
+const pick=(a,v,d)=>{v=String(v||'').trim();if(!v)return d;const f=a.find(x=>x.toLowerCase()==v.toLowerCase());if(f)return f;a.push(v);return v};
+const IEX={
+coach:()=>dlx([['Coaches',S.coaches.map(c=>({Coach:c,Phone:S.phones[c]||'',Clients:(S.map[c]||[]).length}))],['Coach Attendance',S.recs.filter(r=>r.type=='Coach').map(recRow)]],'WinningZone_Coaches.xlsx'),
+client:()=>{const m=kmon();dlx([['Clients',S.coaches.flatMap(c=>(S.map[c]||[]).map(n=>({Client:n,Coach:c,Month:m,Payment:payOf(n,m)})))],['Client Attendance',S.recs.filter(r=>r.type=='Client').map(recRow)]],'WinningZone_Clients.xlsx')},
+hist:()=>dlx([['History',hRecs().map(recRow)]],'WinningZone_History.xlsx'),
+tpl:()=>dlx([['Coaches',[{Coach:'Jijo',Phone:'919876543210'}]],['Clients',[{Client:'Aayushi',Coach:'Jijo',Month:kmon(),Payment:'Paid'}]],['Attendance',[{Date:today(),Type:'Client',Name:'Aayushi',Coach:'Jijo',Shift:'Morning',Location:'Vipul Green',Time:'',Payment:'Paid',Attendance:'Present'}]]],'WinningZone_Import_Template.xlsx')};
+async function impFile(f){const wb=XLSX.read(await f.arrayBuffer(),{type:'array'}),c={co:0,cl:0,rec:0,skip:0};
+wb.SheetNames.forEach(sn=>{const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:''}).map(r=>{const o={};Object.keys(r).forEach(k=>o[k.trim().toLowerCase()]=typeof r[k]=='string'?r[k].trim():r[k]);return o});if(!rows.length)return;const h=rows[0];
+if('date' in h){rows.forEach(r=>{const date=nd(r.date),status=nst(r.attendance||r.status),isC=String(r.type||'').toLowerCase().startsWith('coach')||(!r.type&&/coach/i.test(sn)&&!r.client),name=String(r.name||r.client||r.coach||'').trim();
+if(!date||!status||!name){c.skip++;return}
+const nm=isC?coachN(name):name,co=isC?nm:(String(r.coach||'').trim()?coachN(String(r.coach).trim()):coachOf(name)),pay=['Paid','Unpaid'].find(x=>x.toLowerCase()==String(r.payment||'').toLowerCase())||'';
+if(!isC&&co)addTo(co,nm);
+upsert({type:isC?'Coach':'Client',date,name:nm,coach:co,shift:pick(S.shifts,r.shift,S.shifts[0]),loc:pick(S.locs,r.location||r.loc,S.locs[0]),time:String(r.time||''),status,...(isC?{}:{pay})});c.rec++})}
+else if('client' in h&&'coach' in h){rows.forEach(r=>{const n=String(r.client).trim(),cn=String(r.coach).trim();if(!n||!cn){c.skip++;return}const co=coachN(cn);c.cl+=addTo(co,n);
+const p=['Paid','Unpaid'].find(x=>x.toLowerCase()==String(r.payment||'').toLowerCase());if(p){const mo=String(r.month||kmon()).slice(0,7);S.payM[mo]=S.payM[mo]||{};S.payM[mo][n]=p}})}
+else if('coach' in h){rows.forEach(r=>{const n=String(r.coach).trim();if(!n){c.skip++;return}const co=coachN(n),ph=String(r.phone||'').replace(/\D/g,'');if(ph)S.phones[co]=ph;c.co++})}});
+save();render();toast(`✔ Imported: ${c.co} coach, ${c.cl} new client, ${c.rec} attendance record(s)`+(c.skip?` · ${c.skip} row(s) skipped`:''))}
+[['#coach','coach'],['#client','client'],['#hist','hist']].forEach(([s,k])=>$(s+' .card h3').insertAdjacentHTML('afterend',`<div class="row ie"><b>📁 Excel</b><button class="btn s g" data-ie="${k}">⬇ Export</button><label class="impl">⬆ Import<input type="file" accept=".xlsx,.xls,.csv" data-imp hidden></label><button class="btn s" data-ie="tpl">📄 Template</button><small style="color:var(--m)">Import adds to existing data – nothing is deleted.</small></div>`));
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ie]');if(b)try{IEX[b.dataset.ie]()}catch(x){toast('Export failed: '+x.message)}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.imp!==undefined&&t.files[0]){impFile(t.files[0]).catch(x=>toast('Import failed: '+x.message));t.value=''}});
+
+/* ===== PERFORMANCE DASHBOARD ===== */
+const PF={mode:'week',ref:today(),coach:'',loc:'',sort:'low',q:''};
+const grade=p=>p==null?['–','No data','#9aa3b2']:p>=85?['A','Excellent','#1e9e5a']:p>=70?['B','Good','#5aa832']:p>=50?['C','Needs push','#e08a1e']:['D','At risk','#d64545'];
+const per=()=>PF.mode=='day'?[PF.ref,PF.ref]:range(PF.mode,PF.ref);
+const cnt=a=>{const o={Present:0,Absent:0,Leave:0,Weekoff:0,n:0};a.forEach(r=>{o[r.status]++;o.n++});o.pct=o.n-o.Weekoff>0?pct(o.Present,o.n-o.Weekoff):null;return o};
+const bk=r=>PF.mode=='day'?r.shift:PF.mode=='week'?r.date:range('week',r.date)[0];
+const bl=k=>PF.mode=='day'?k:PF.mode=='week'?new Date(k+'T00:00:00').toLocaleString('en-US',{weekday:'short'})+' '+k.slice(8):'Wk '+k.slice(5);
+function pdata(cn){const[F,T]=per(),cs=cn===undefined?(PF.coach?[PF.coach]:S.coaches):(cn?[cn]:S.coaches),R=S.recs.filter(r=>r.date>=F&&r.date<=T&&(!PF.loc||r.loc==PF.loc)),own=r=>r.coach||coachOf(r.name),dts=[];
+for(let d=new Date(F+'T00:00:00');iso(d)<=T&&dts.length<400;d.setDate(d.getDate()+1))dts.push(iso(d));
+const rows=cs.map(c=>{const cr=R.filter(r=>r.type=='Coach'&&r.name==c),ks=R.filter(r=>r.type=='Client'&&own(r)==c),ca=cnt(cr),ka=cnt(ks),seen=new Map();
+[...(S.map[c]||[]),...ks.map(r=>r.name)].forEach(x=>{if(!seen.has(x.toLowerCase()))seen.set(x.toLowerCase(),x)});
+const cl=[...seen.values()].map(n=>{const a=ks.filter(r=>r.name.toLowerCase()==n.toLowerCase()),k=cnt(a),dm={};a.forEach(r=>{(dm[r.date]=dm[r.date]||{})[r.status]=1});
+const ds=Object.keys(dm).sort(),st=d=>dm[d].Present?'Present':dm[d].Absent?'Absent':dm[d].Leave?'Leave':'Weekoff';let sk=0;for(let i=ds.length-1;i>=0;i--){const s=st(ds[i]);if(s=='Present')sk++;else if(s=='Absent')break}
+const hp=ds.filter(d=>st(d)=='Present');return{...k,name:n,coach:c,days:hp.length,streak:sk,last:hp.length?hp[hp.length-1]:'',pay:payOf(n,T.slice(0,7)),g:grade(k.pct),heat:dts.map(d=>dm[d]?st(d):'')}});
+const sc=ca.pct==null?ka.pct:ka.pct==null?ca.pct:Math.round(ca.pct*.4+ka.pct*.6);
+return{c,cr,ks,ca,ka,cl,sc,risk:cl.filter(x=>x.pct!=null&&x.pct<50).length,good:cl.filter(x=>x.pct!=null&&x.pct>=70).length,unm:cl.filter(x=>!x.n).length}});
+const B={},gb=k=>B[k]=B[k]||{Period:k,'Coach Present':0,'Coach Absent':0,'Clients Present':0,'Clients Absent':0,'Clients Leave':0,'Clients Weekoff':0};
+rows.forEach(o=>{o.cr.forEach(r=>{const b=gb(bk(r));if(r.status=='Present')b['Coach Present']++;if(r.status=='Absent')b['Coach Absent']++});o.ks.forEach(r=>gb(bk(r))['Clients '+r.status]++)});
+const br=Object.keys(B).sort((a,b)=>PF.mode=='day'?S.shifts.indexOf(a)-S.shifts.indexOf(b):a.localeCompare(b)).map(k=>{const b=B[k],d=b['Clients Present']+b['Clients Absent']+b['Clients Leave'];return{...b,Label:bl(k),'Client Att %':d?pct(b['Clients Present'],d):null}});
+return{F,T,dts,rows,br,ac:cnt(rows.flatMap(o=>o.cr)),ak:cnt(rows.flatMap(o=>o.ks))}}
+function pmsg(cn){const D=pdata(cn),N={day:'Daily',week:'Weekly',month:'Monthly'}[PF.mode];
+if(PF.mode=='day')return'*Winning Zone – Daily Report*\n📅 '+D.F+LEG+'\n\n'+D.rows.map(o=>coachBlock(o.c,D.F)).join('\n\n');
+const L=['*Winning Zone – '+N+' Report*','📅 '+D.F+' → '+D.T+(PF.loc?' · '+PF.loc:'')+LEG,''];
+D.rows.forEach(o=>{L.push('*'+o.c+'* – Score '+(o.sc==null?'–':o.sc+'%'),`🧑‍🏫 Coach: ✅${o.ca.Present} ❌${o.ca.Absent} 🟠${o.ca.Leave} ⚪${o.ca.Weekoff} (${o.ca.pct==null?'–':o.ca.pct+'%'})`,`👥 Clients: ✅${o.ka.Present} ❌${o.ka.Absent} 🟠${o.ka.Leave} (${o.ka.pct==null?'–':o.ka.pct+'%'})`);
+const f=(t,a)=>{if(a.length)L.push(t+' ('+a.length+'): '+a.map(x=>x.name+' '+x.pct+'%').join(', '))},v=x=>x.pct!=null;
+f('🌟 Regular ≥85%',o.cl.filter(x=>v(x)&&x.pct>=85));f('🙂 Average 50–84%',o.cl.filter(x=>v(x)&&x.pct>=50&&x.pct<85));f('⚠ Irregular <50%',o.cl.filter(x=>v(x)&&x.pct<50));
+const nm=o.cl.filter(x=>!x.n).map(x=>x.name);if(nm.length)L.push('⏳ No record ('+nm.length+'): '+nm.join(', '));const up=o.cl.filter(x=>x.pay=='Unpaid').map(x=>x.name);if(up.length)L.push('💰 Unpaid: '+up.join(', '));L.push('')});
+return L.join('\n').trim()}
+function pxl(){const D=pdata(),add=(r,n)=>[n,r];
+dlx([add(D.rows.map(o=>({Coach:o.c,'Coach Present':o.ca.Present,'Coach Absent':o.ca.Absent,'Coach Leave':o.ca.Leave,'Coach Weekoff':o.ca.Weekoff,'Coach Att %':o.ca.pct??'','Clients':o.cl.length,'Client Present':o.ka.Present,'Client Absent':o.ka.Absent,'Client Leave':o.ka.Leave,'Client Att %':o.ka.pct??'','Score %':o.sc??'','Active (>=70%)':o.good,'At risk (<50%)':o.risk,'No record':o.unm})),'Coach Summary'),
+add(D.rows.flatMap(o=>o.cl.map(x=>({Coach:o.c,Client:x.name,Present:x.Present,Absent:x.Absent,Leave:x.Leave,Weekoff:x.Weekoff,Total:x.n,'Att %':x.pct??'',Grade:x.g[0]+' - '+x.g[1],'Days attended':x.days,'Current streak':x.streak,'Last present':x.last,Payment:x.pay||''}))),'Client Evaluation'),
+add(D.br.map(({Label,...b})=>b),(PF.mode=='day'?'Shift-wise':PF.mode=='week'?'Day-wise':'Week-wise')),
+add(D.rows.flatMap(o=>o.cl.map(x=>{const r={Coach:o.c,Client:x.name};D.dts.forEach((d,i)=>r[d.slice(5)]=SL[x.heat[i]]||'');return r})),'Client x Date')],
+`WinningZone_${PF.mode}_${D.F}_to_${D.T}.xlsx`)}
+function perf(){const el=$('#perf');
+if(!$('#pfk')){el.innerHTML=`<div class="hero"><div class="row" style="align-items:center"><div><h2 style="margin:0;font-size:20px">📈 Performance &amp; evaluation</h2><small id="pfper"></small></div><span style="flex:1"></span><span class="seg">${[['day','Day'],['week','Week'],['month','Month']].map(m=>`<button data-pf="mode" data-v="${m[0]}">${m[1]}</button>`).join('')}</span></div>
+<div class="row" style="margin:0"><button class="btn s" data-pf="prev">◀</button><label>Date<input type="date" data-pfi="ref"></label><button class="btn s" data-pf="next">▶</button><label>Coach<select data-pfi="coach"></select></label><label>Location<select data-pfi="loc"></select></label><label>Sort clients<select data-pfi="sort"><option value="low">Lowest attendance first</option><option value="high">Highest first</option><option value="name">Name A–Z</option></select></label><label>Find client<input data-pfi="q" placeholder="Search"></label></div></div>
+<div class="row"><button class="btn g" data-pf="wsel" id="pfws"></button><button class="btn g" data-pf="wall">📲 WhatsApp – all coaches</button><button class="btn" data-pf="copy">📋 Copy report</button><button class="btn" data-pf="xl">⬇ Excel report</button></div>
+<div id="pfk" class="kp"></div><div class="two mt" style="margin-top:12px"><div class="card"><h3>Client attendance mix</h3><div id="pfm"></div></div><div class="card"><h3 id="pfbt"></h3><div id="pfbc"></div></div></div>
+<h3 style="color:var(--n)">Coach scorecards <small style="font-weight:400;color:var(--m)">score = 40% coach + 60% client attendance · tap a card to filter</small></h3><div id="pfc" class="cg"></div>
+<div class="card"><h3 id="pfct"></h3><div class="sc rp"><table><thead><tr><th>Client</th><th>Coach</th><th>Activity</th><th>P</th><th>A</th><th>L</th><th>W</th><th>Att %</th><th>Streak</th><th>Last present</th><th>Pay</th><th>Grade</th></tr></thead><tbody id="pft"></tbody></table></div><small style="color:var(--m)">Grade: A ≥85% · B ≥70% · C ≥50% · D below 50%. Streak = days in a row present (ignoring leave/weekoff).</small></div>
+<div class="card"><h3>Breakdown</h3><div class="sc rp" id="pfb"></div></div>`}
+$$('[data-pf=mode]').forEach(b=>b.classList.toggle('on',b.dataset.v==PF.mode));
+const q=s=>el.querySelector('[data-pfi='+s+']');q('ref').value=PF.ref;rf(q('coach'),opts(S.coaches,'All coaches'));q('coach').value=PF.coach;rf(q('loc'),opts(S.locs,'All locations'));q('loc').value=PF.loc;q('sort').value=PF.sort;
+$('#pfws').style.display=PF.coach?'':'none';$('#pfws').textContent='📲 Send to '+PF.coach+(S.phones[PF.coach]?'':' (pick chat)');
+const D=pdata();$('#pfper').textContent=({day:'Daily',week:'Weekly',month:'Monthly'}[PF.mode])+' · '+D.F+(D.F==D.T?'':' → '+D.T)+(PF.coach?' · '+PF.coach:' · all coaches');
+const all=D.rows.flatMap(o=>o.cl),act=all.filter(x=>x.pct!=null&&x.pct>=70).length,risk=all.filter(x=>x.pct!=null&&x.pct<50).length;
+$('#pfk').innerHTML=[['Coach attendance',D.ac.pct==null?'–':D.ac.pct+'%'],['Client attendance',D.ak.pct==null?'–':D.ak.pct+'%'],['Client sessions present',D.ak.Present],['Client absences',D.ak.Absent],['Regular clients (≥70%)',act],['At-risk clients (<50%)',risk],['Clients with no record',all.filter(x=>!x.n).length]].map(x=>`<div><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+const k=D.ak,tot=k.n||1,cu=[['Present','var(--ok)'],['Absent','var(--no)'],['Leave','var(--lv)'],['Weekoff','var(--wo)']];let a=0;const cg=cu.map(([s,c])=>{const f=a;a+=k[s]*100/tot;return`${c} ${f}% ${a}%`}).join(',');
+$('#pfm').innerHTML=k.n?`<div class="mix"><div class="donut" style="background:conic-gradient(${cg})"><b>${k.pct==null?'–':k.pct+'%'}</b></div><ul>${cu.map(([s,c])=>`<li><i style="background:${c}"></i>${s}: <b>${k[s]}</b></li>`).join('')}</ul></div>`:'<small>No client records in this period</small>';
+$('#pfbt').textContent=PF.mode=='day'?'Client attendance by shift':PF.mode=='week'?'Client attendance by day':'Client attendance by week';
+$('#pfbc').innerHTML=D.br.length?`<div class="col">${D.br.map(b=>`<div title="${b['Clients Present']} present / ${b['Clients Absent']} absent"><span>${b['Client Att %']==null?'–':b['Client Att %']+'%'}</span><i style="height:${b['Client Att %']||0}%"></i>${esc(b.Label)}</div>`).join('')}</div>`:'<small>No data</small>';
+$('#pfc').innerHTML=D.rows.map(o=>`<div class="cc${PF.coach==o.c?' sel':''}" data-pf="coach" data-v="${esc(o.c)}"><div class="ring" style="--v:${o.sc||0};--c:${grade(o.sc)[2]}"><b>${o.sc==null?'–':o.sc}</b></div><div style="flex:1"><b>${esc(o.c)}</b> <span class="gd" style="background:${grade(o.sc)[2]}">${grade(o.sc)[0]}</span><br><small>Coach ${o.ca.pct==null?'–':o.ca.pct+'%'} · Clients ${o.ka.pct==null?'–':o.ka.pct+'%'}</small><br><small>${o.cl.length} clients · ⚠ ${o.risk} at risk · ⏳ ${o.unm} no record</small></div><button class="btn s g" data-pf="wc" data-v="${esc(o.c)}" title="WhatsApp to ${esc(o.c)}">📲</button></div>`).join('')||'<small>No coaches</small>';
+const qs=($('#perf [data-pfi=q]').value||'').toLowerCase();let L=all.filter(x=>x.name.toLowerCase().includes(qs));const key=x=>x.pct==null?(PF.sort=='high'?-1:101):x.pct;
+L.sort((a,b)=>PF.sort=='name'?a.name.localeCompare(b.name):PF.sort=='high'?key(b)-key(a):key(a)-key(b));
+$('#pfct').textContent='Client evaluation · '+L.length+' client(s)';
+$('#pft').innerHTML=L.map(x=>`<tr><td style="text-align:left"><b>${esc(x.name)}</b></td><td>${esc(x.coach)}</td><td><span class="heat" title="${D.F} → ${D.T}">${x.heat.map((s,i)=>`<i class="${s}" title="${D.dts[i]}${s?' · '+s:''}"></i>`).join('')}</span></td><td>${x.Present}</td><td>${x.Absent}</td><td>${x.Leave}</td><td>${x.Weekoff}</td><td><b>${x.pct==null?'–':x.pct+'%'}</b></td><td>${x.streak}</td><td>${x.last?x.last.slice(5):'–'}</td><td>${x.pay||'–'}</td><td><span class="gd" style="background:${x.g[2]}">${x.g[0]} · ${x.g[1]}</span></td></tr>`).join('')||'<tr><td colspan="12">No clients</td></tr>';
+$('#pfb').innerHTML=D.br.length?`<table><thead><tr><th>${PF.mode=='day'?'Shift':PF.mode=='week'?'Day':'Week starting'}</th><th>Coach ✅</th><th>Coach ❌</th><th>Clients ✅</th><th>Clients ❌</th><th>Leave</th><th>Weekoff</th><th>Client att %</th></tr></thead><tbody>${D.br.map(b=>`<tr><td style="text-align:left">${esc(PF.mode=='month'?b.Period:b.Label)}</td><td>${b['Coach Present']}</td><td>${b['Coach Absent']}</td><td>${b['Clients Present']}</td><td>${b['Clients Absent']}</td><td>${b['Clients Leave']}</td><td>${b['Clients Weekoff']}</td><td><b>${b['Client Att %']==null?'–':b['Client Att %']+'%'}</b></td></tr>`).join('')}</tbody></table>`:'<small>No records in this period – mark attendance in Coaches / Clients first.</small>'}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-pf]');if(!b)return;const a=b.dataset.pf,v=b.dataset.v;
+if(a=='mode')PF.mode=v;
+else if(a=='prev'||a=='next'){const d=new Date(PF.ref+'T00:00:00'),s=a=='next'?1:-1;if(PF.mode=='day')d.setDate(d.getDate()+s);else if(PF.mode=='week')d.setDate(d.getDate()+7*s);else{d.setDate(1);d.setMonth(d.getMonth()+s)}PF.ref=iso(d)}
+else if(a=='coach')PF.coach=PF.coach==v?'':v;
+else if(a=='wc')return waOpen(pmsg(v),S.phones[v]);
+else if(a=='wsel')return waOpen(pmsg(PF.coach),S.phones[PF.coach]);
+else if(a=='wall')return waOpen(pmsg(''));
+else if(a=='copy')return(navigator.clipboard?navigator.clipboard.writeText(wx(pmsg(PF.coach))):Promise.reject()).then(()=>toast('✔ Report copied'),()=>toast('Copy not allowed here'));
+else if(a=='xl')return pxl();
+perf()});
+document.addEventListener('change',e=>{const t=e.target,k=t.dataset&&t.dataset.pfi;if(!k||k=='q'||(k=='ref'&&!t.value))return;PF[k]=t.value;perf()});
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.pfi=='q')perf()});
+
+$$('.pq').forEach(x=>x.innerHTML=PQ);
+(()=>{const[a,z]=range('month');$('#dm').value=a.slice(0,7);$('#df').value=$('#cf').value=a;$('#dt2').value=$('#ct2').value=z})();
+if(S.coaches.length&&$('#kc').value=='__all')$('#kc').value=S.coaches[0];document.querySelector('#nav button').click();try{clientTab()}catch(e){}
+setTimeout(()=>{const p=pend(today());if(p)toast('⚠ Today: '+p+' attendance entries pending')},900);
+</script></body></html>
